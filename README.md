@@ -1,205 +1,407 @@
-# Teste para Desenvolvedor(a) Back-End Node.js/NestJS - Sistemas Distribuídos
+# 📽️ Starsoft Backend Challenge
 
-## Introdução
-
-Bem-vindo(a) ao processo seletivo para a posição de **Desenvolvedor(a) Back-End** em nossa equipe! Este teste tem como objetivo avaliar suas habilidades técnicas em sistemas distribuídos, alta concorrência, e arquiteturas escaláveis utilizando Node.js e NestJS.
-
-## Instruções
-
-- Faça um **fork** deste repositório para o seu GitHub pessoal.
-- Desenvolva as soluções solicitadas abaixo, seguindo as **melhores práticas de desenvolvimento**.
-- Após a conclusão, envie o link do seu repositório para avaliação.
-- Sinta-se à vontade para adicionar qualquer documentação ou comentários que julgar necessário.
-
-## Desafio
-
-### Contexto
-
-Você foi designado para desenvolver o sistema de venda de ingressos para uma **rede de cinemas**. O sistema precisa lidar com **concorrência**: múltiplos usuários tentando comprar os mesmos assentos simultaneamente.
-
-### O Problema Real
-
-Imagine a seguinte situação:
-
-- Uma sala de cinema com **2 assentos disponíveis**
-- **10 usuários** tentando comprar no mesmo momento
-- **Múltiplas instâncias** da aplicação rodando simultaneamente
-- Necessidade de garantir que **nenhum assento seja vendido duas vezes**
-- **Reservas temporárias** enquanto o pagamento é processado (30 segundos)
-- **Cancelamento automático** se o pagamento não for confirmado
-
-### Requisitos Obrigatórios
-
-#### 1. **Configuração do Ambiente**
-
-Configure um ambiente de desenvolvimento utilizando **Docker** e **Docker Compose**, incluindo:
-
-- Aplicação Node.js com **NestJS**
-- **Banco de dados relacional** (PostgreSQL, MySQL, etc.)
-- **Sistema de mensageria** (Kafka, RabbitMQ, etc.)
-- **Banco de dados distribuído** para cache (Redis, Memcached, etc.)
-- A aplicação deve ser iniciada com um único comando (`docker-compose up`)
-
-#### 2. **API RESTful - Gestão de Ingressos**
-
-Implemente uma API RESTful com as seguintes operações:
-
-**2.1. Gestão de Sessões**
-
-- Criar sessões de cinema (filme, horário, sala)
-- Definir assentos disponíveis por sessão (Mínimo 16 assentos)
-- Definir preço do ingresso
-
-**2.2. Reserva de Assentos**
-
-- Endpoint para reservar assento(s)
-- Reserva tem validade de 30 segundos
-- Retornar ID da reserva e timestamp de expiração
-
-**2.3. Confirmação de Pagamento**
-
-- Endpoint para confirmar pagamento de uma reserva, e assim converter reserva em venda definitiva
-- Publicar evento de venda confirmada
-
-**2.4. Consultas**
-
-- Buscar disponibilidade de assentos por sessão (tempo real)
-- Histórico de compras por usuário
-
-#### 3. **Processamento Assíncrono com Mensageria**
-
-- Usar **sistema de mensageria** para comunicação assíncrona entre componentes
-- Publicar eventos quando: reserva criada, pagamento confirmado, reserva expirada, assento liberado
-- Consumir e processar esses eventos de forma confiável
-
-#### 4. **Logging**
-
-- Implementar logging estruturado (níveis: DEBUG, INFO, WARN, ERROR)
-
-#### 5. **Clean Code e Boas Práticas**
-
-- Aplicar princípios SOLID
-- Separação clara de responsabilidades (Controllers, Services, Repositories/Use Cases)
-- Tratamento adequado de erros
-- Configurar ESLint e Prettier
-- Commits organizados e descritivos
-
-### Requisitos Técnicos Específicos
-
-#### Estrutura de Banco de Dados Sugerida
-
-Você deve projetar um schema que suporte:
-
-- **Sessões**: informações da sessão (filme, horário, sala)
-- **Assentos**: assentos disponíveis por sessão
-- **Reservas**: reservas temporárias com expiração
-- **Vendas**: vendas confirmadas
-
-#### Fluxo de Reserva Esperado
-
-```
-1. Cliente solicita uma reserva
-2. Sistema verifica disponibilidade com proteção contra concorrência
-3. Cria reserva temporária (válida por 30 segundos)
-4. Publica evento no sistema de mensageria
-5. Retorna ID da reserva
-
-6. Cliente confirma o pagamento
-7. Sistema valida reserva (ainda não expirou?)
-8. Converte reserva em venda definitiva
-9. Publica evento de confirmação no sistema de mensageria
-```
-
-#### Edge Cases a Considerar
-
-1. **Race Condition**: 2 usuários clicam no último assento disponível no mesmo milissegundo
-2. **Deadlock**: Usuário A reserva assentos 1 e 3, Usuário B reserva assentos 3 e 1, ambos tentam reservar o assento do outro
-3. **Idempotência**: Cliente reenvia mesma requisição por timeout
-4. **Expiração**: Reservas não confirmadas devem liberar o assento automaticamente após 30 segundos
-
-### Diferenciais (Opcional - Pontos Extra)
-
-Os itens abaixo são opcionais e darão pontos extras na avaliação:
-
-- **Documentação da API**: Swagger/OpenAPI acessível em `/api-docs`
-- **Testes de Unidade**: Cobertura de 60-70%, mockar dependências externas
-- **Dead Letter Queue (DLQ)**: Mensagens que falharam vão para fila separada
-- **Retry Inteligente**: Sistema de retry com backoff exponencial
-- **Processamento em Batch**: Processar mensagens em lotes
-- **Testes de Integração/Concorrência**: Simular múltiplos usuários simultaneamente
-- **Rate Limiting**: Limitar requisições por IP/usuário
-
-### Critérios de Avaliação
-
-Os seguintes aspectos serão considerados (em ordem de importância):
-
-1. **Funcionalidade Correta**: O sistema garante que nenhum assento é vendido duas vezes?
-2. **Controle de Concorrência**: Coordenação distribuída implementada corretamente?
-3. **Qualidade de Código**: Clean code, SOLID, padrões de projeto?
-4. **Documentação**: README claro e código bem estruturado?
-
-### Entrega
-
-#### Repositório Git
-
-- Código disponível em repositório público (GitHub/GitLab)
-- Histórico de commits bem organizado e descritivo
-- Branch `main` deve ser a versão final
-
-#### README.md Obrigatório
-
-Deve conter:
-
-1. **Visão Geral**: Breve descrição da solução
-2. **Tecnologias Escolhidas**: Qual banco de dados, sistema de mensageria e cache você escolheu e por quê?
-3. **Como Executar**:
-   - Pré-requisitos
-   - Comandos para subir o ambiente
-   - Como popular dados iniciais
-   - Como executar testes (se houver)
-4. **Estratégias Implementadas**:
-   - Como você resolveu race conditions?
-   - Como garantiu coordenação entre múltiplas instâncias?
-   - Como preveniu deadlocks?
-5. **Endpoints da API**: Lista com exemplos de uso
-6. **Decisões Técnicas**: Justifique escolhas importantes de design
-7. **Limitações Conhecidas**: O que ficou faltando? Por quê?
-8. **Melhorias Futuras**: O que você faria com mais tempo?
-
-### Exemplo de Fluxo para Testar
-
-Para facilitar a avaliação, inclua instruções ou script mostrando:
-
-```
-1. Criar sessão "Filme X - 19:00"
-2. Criar sala com no mínimo 16 assentos, a R$ 25,00 cada
-3. Simular
- 3.1. 2 usuários tentando reservar o mesmo assento simultaneamente
-4. Verificar quantidade de reservas geradas
-5. Comprovar o funcionamento do fluxo de pagamento do assento
-```
-
-### Prazo
-
-- **Prazo sugerido**: 5 dias corridos a partir do recebimento do desafio
-
-### Dúvidas e Suporte
-
-- Abra uma **Issue** neste repositório caso tenha dúvidas sobre requisitos
-- Não fornecemos suporte para problemas de configuração de ambiente
-- Assuma premissas razoáveis quando informações estiverem ambíguas e documente-as
+O **Starsoft-backend-challenge** é uma API inteligente que simula um sistema de compra de ingressos de cinema.  
+A aplicação foi desenvolvida com foco em **eficiência**, **consistência de dados** e **persistência**, utilizando uma arquitetura moderna, escalável e preparada para múltiplas instâncias.
 
 ---
 
-## Observações Finais
+## 🧱 Stack utilizada
 
-Este é um desafio que reflete problemas reais enfrentados em produção. **Não esperamos que você implemente 100% dos requisitos**, especialmente os diferenciais. Priorize:
+- **NestJS (Node.js + TypeScript)** — Construção da API
+- **Piro** — Sistema de logs (log, debug, warn e error)
+- **TypeORM** — ORM para persistência de dados
+- **Docker** — Containerização e múltiplas instâncias
+- **PostgreSQL** — Banco de dados relacional
+- **Redis** — Cache e coordenação entre instâncias
+- **Nginx** — Balanceador de carga
+- **Husky** — Gerenciador de commits.
 
-1. ✅ Garantir que nenhum assento seja vendido duas vezes
-2. ✅ Sistema de mensageria confiável
-3. ✅ Código limpo e bem estruturado
-4. ✅ Documentação clara
+---
 
-**Qualidade > Quantidade**. É melhor implementar poucas funcionalidades muito bem feitas do que muitas de forma superficial.
+## 🚀 Iniciando o projeto na sua máquina
 
-**Boa sorte! Estamos ansiosos para conhecer sua solução e discutir suas decisões técnicas na entrevista.**
+### 1️⃣ Clonar o repositório
+
+```bash
+git clone https://github.com/LuizHenriqueGomesRibeiro/starsoft
+```
+
+### 2️⃣ Instalar as dependências
+
+```bash
+npm install
+```
+
+### 3️⃣ Subir a aplicação (primeira execução)
+
+```bash
+docker-compose up --build
+```
+
+---
+
+### 🔁 Escalando instâncias da API
+
+O número de instâncias gerenciadas pelo **Nginx** pode ser ajustado no build:
+
+```bash
+docker-compose up --build --scale api=5
+```
+
+> Cria **5 instâncias** da API
+
+```bash
+docker-compose up --build --scale api=1
+```
+
+> Cria apenas **1 instância** da API
+
+Em ambos os casos, um container **Nginx** é iniciado para distribuir dinamicamente as requisições entre as instâncias.
+
+---
+
+### 🪵 Visualização de logs (opcional)
+
+```bash
+docker-compose logs -f
+```
+
+Exibe em tempo real **somente os logs gerados pelo Piro**:
+- `log`
+- `debug`
+- `warn`
+- `error`
+
+### 📦 Commit
+
+```bash
+npm run commit
+```
+
+Comando roda **eslint** para barrar commit caso haja algum erro no código. Roda também **prettier** para barrar qualquer discrepância estilística no commit. Rodando ***npm run commit***, aparecem quatro opções de flags de commit:
+- `feat`: uma nova funcionalidade.
+- `fix`: correção de um erro.
+- `chore`: configurações e ferramentas.
+- `error`: documentação.
+
+---
+
+## 🔐 Autenticação
+
+### `POST /auth/login`
+
+**Params**
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+**Response**
+```json
+{
+  "access_token": "string",
+  "instanceId": "string"
+}
+```
+
+---
+
+## 👤 Usuários
+
+### `POST /user`
+
+**Params**
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+**Response**
+```json
+{
+  "id": "uuid",
+  "email": "string",
+  "instanceId": "string"
+}
+```
+
+---
+
+## 🎬 Sessões de Cinema
+
+### `POST /sessions`
+
+**Params**
+```json
+{
+  "movieTitle": "string",
+  "startTime": "Date",
+  "price": 0,
+  "seats": ["string"]
+}
+```
+
+**Response**
+```json
+{
+  "id": "uuid",
+  "movieTitle": "string",
+  "startTime": "Date",
+  "seats": [
+    {
+      "id": "uuid",
+      "row": "string",
+      "number": 0,
+      "bookingId": "uuid",
+      "lockedAt": 0,
+      "reservationId": "uuid"
+    }
+  ]
+}
+```
+
+---
+
+### `GET /seats/session/:sessionId`
+
+**Response**
+```json
+[
+  {
+    "id": "uuid",
+    "row": "string",
+    "number": 0,
+    "bookingId": "uuid",
+    "lockedAt": 0,
+    "reservationId": "uuid"
+  }
+]
+```
+
+---
+
+## 🎟️ Reservas
+
+### `POST /reservations/lock/:id`
+
+Bloqueia os assentos temporariamente.
+
+**Response**
+```json
+{
+  "id": "uuid",
+  "userId": "uuid",
+  "price": 0,
+  "status": "string",
+  "seats": [
+    {
+      "id": "uuid",
+      "row": "string",
+      "number": 0,
+      "bookingId": "uuid",
+      "lockedAt": 0,
+      "reservationId": "uuid"
+    }
+  ],
+  "createdAt": "Date",
+  "instanceId": "string"
+}
+```
+
+---
+
+### `POST /reservations/confirm/:id`
+
+Confirma a reserva e finaliza a compra.
+
+**Response**
+```json
+{
+  "id": "uuid",
+  "userId": "uuid",
+  "price": 0,
+  "status": "string",
+  "seats": [
+    {
+      "id": "uuid",
+      "row": "string",
+      "number": 0,
+      "bookingId": "uuid",
+      "lockedAt": 0,
+      "reservationId": "uuid"
+    }
+  ],
+  "createdAt": "Date",
+  "instanceId": "string"
+}
+```
+ Ao confirmar compra do ticket, um **Proxy** de **Microsserviço** publica o evento **reservation_confirmed**.
+
+---
+
+### `GET /reservations/my-history`
+
+Retorna o histórico de reservas do usuário autenticado.
+
+**Response**
+```json
+[
+  {
+    "id": "uuid",
+    "userId": "uuid",
+    "price": 0,
+    "status": "string",
+    "seats": [
+      {
+        "id": "uuid",
+        "row": "string",
+        "number": 0,
+        "bookingId": "uuid",
+        "lockedAt": 0,
+        "reservationId": "uuid"
+      }
+    ]
+  }
+]
+```
+
+## 📊 Teste de Concorrência – Lock de Assentos
+
+ O teste abaixo simula **100 tentativas concorrentes** de reserva para o mesmo recurso.
+Apenas a primeira requisição foi bem-sucedida (`201`), enquanto as demais retornaram `400`,
+demonstrando consistência no mecanismo de lock distribuído.
+
+ Comando:
+
+```
+node teste-concorrencia.js [seatId] [access_token]
+```
+
+ Resultado:
+
+```
+| Tentativa | Instância        | Status | Tempo |
+|-----------|------------------|--------|-------|
+| 1         | aa7e47feff86     | 400    | 236ms |
+| 2         | 0c03eef54469     | 400    | 217ms |
+| 3         | c3f2a4652fc7     | 400    | 185ms |
+| 4         | 557dfa268687     | 201    | 206ms |
+| 5         | 8c066f9f120e     | 400    | 181ms |
+| 6         | aa7e47feff86     | 400    | 208ms |
+| 7         | 0c03eef54469     | 400    | 217ms |
+| 8         | c3f2a4652fc7     | 400    | 190ms |
+| 9         | 557dfa268687     | 400    | 192ms |
+| 10        | 8c066f9f120e     | 400    | 191ms |
+| 11        | aa7e47feff86     | 400    | 214ms |
+| 12        | 0c03eef54469     | 400    | 223ms |
+| 13        | c3f2a4652fc7     | 400    | 196ms |
+| 14        | 557dfa268687     | 400    | 192ms |
+| 15        | 8c066f9f120e     | 400    | 182ms |
+| 16        | aa7e47feff86     | 400    | 257ms |
+| 17        | 0c03eef54469     | 400    | 223ms |
+| 18        | c3f2a4652fc7     | 400    | 219ms |
+| 19        | 557dfa268687     | 400    | 212ms |
+| 20        | 8c066f9f120e     | 400    | 225ms |
+| 21        | 8c066f9f120e     | 400    | 198ms |
+| 22        | aa7e47feff86     | 400    | 244ms |
+| 23        | 0c03eef54469     | 400    | 264ms |
+| 24        | c3f2a4652fc7     | 400    | 221ms |
+| 25        | 0c03eef54469     | 400    | 262ms |
+| 26        | aa7e47feff86     | 400    | 270ms |
+| 27        | 557dfa268687     | 400    | 210ms |
+| 28        | c3f2a4652fc7     | 400    | 246ms |
+| 29        | 8c066f9f120e     | 400    | 227ms |
+| 30        | 557dfa268687     | 400    | 245ms |
+| 31        | aa7e47feff86     | 400    | 268ms |
+| 32        | 0c03eef54469     | 400    | 262ms |
+| 33        | c3f2a4652fc7     | 400    | 245ms |
+| 34        | 557dfa268687     | 400    | 246ms |
+| 35        | 8c066f9f120e     | 400    | 226ms |
+| 36        | 0c03eef54469     | 400    | 276ms |
+| 37        | aa7e47feff86     | 400    | 278ms |
+| 38        | 557dfa268687     | 400    | 268ms |
+| 39        | c3f2a4652fc7     | 400    | 263ms |
+| 40        | aa7e47feff86     | 400    | 277ms |
+| 41        | 8c066f9f120e     | 400    | 244ms |
+| 42        | 0c03eef54469     | 400    | 280ms |
+| 43        | c3f2a4652fc7     | 400    | 271ms |
+| 44        | 8c066f9f120e     | 400    | 248ms |
+| 45        | 557dfa268687     | 400    | 270ms |
+| 46        | aa7e47feff86     | 400    | 281ms |
+| 47        | 0c03eef54469     | 400    | 282ms |
+| 48        | 557dfa268687     | 400    | 268ms |
+| 49        | c3f2a4652fc7     | 400    | 268ms |
+| 50        | 8c066f9f120e     | 400    | 251ms |
+| 51        | aa7e47feff86     | 400    | 208ms |
+| 52        | 0c03eef54469     | 400    | 246ms |
+| 53        | c3f2a4652fc7     | 400    | 199ms |
+| 54        | 557dfa268687     | 400    | 217ms |
+| 55        | 8c066f9f120e     | 400    | 191ms |
+| 56        | aa7e47feff86     | 400    | 249ms |
+| 57        | 0c03eef54469     | 400    | 247ms |
+| 58        | c3f2a4652fc7     | 400    | 213ms |
+| 59        | 557dfa268687     | 400    | 218ms |
+| 60        | 8c066f9f120e     | 400    | 205ms |
+| 61        | aa7e47feff86     | 400    | 259ms |
+| 62        | 0c03eef54469     | 400    | 255ms |
+| 63        | 557dfa268687     | 400    | 239ms |
+| 64        | c3f2a4652fc7     | 400    | 239ms |
+| 65        | 8c066f9f120e     | 400    | 212ms |
+| 66        | aa7e47feff86     | 400    | 260ms |
+| 67        | c3f2a4652fc7     | 400    | 246ms |
+| 68        | 0c03eef54469     | 400    | 256ms |
+| 69        | 557dfa268687     | 400    | 247ms |
+| 70        | 8c066f9f120e     | 400    | 225ms |
+| 71        | aa7e47feff86     | 400    | 268ms |
+| 72        | c3f2a4652fc7     | 400    | 255ms |
+| 73        | 0c03eef54469     | 400    | 269ms |
+| 74        | 557dfa268687     | 400    | 248ms |
+| 75        | 8c066f9f120e     | 400    | 230ms |
+| 76        | aa7e47feff86     | 400    | 271ms |
+| 77        | 0c03eef54469     | 400    | 270ms |
+| 78        | c3f2a4652fc7     | 400    | 255ms |
+| 79        | 557dfa268687     | 400    | 253ms |
+| 80        | 8c066f9f120e     | 400    | 236ms |
+| 81        | 0c03eef54469     | 400    | 273ms |
+| 82        | aa7e47feff86     | 400    | 271ms |
+| 83        | c3f2a4652fc7     | 400    | 255ms |
+| 84        | 557dfa268687     | 400    | 254ms |
+| 85        | 8c066f9f120e     | 400    | 241ms |
+| 86        | aa7e47feff86     | 400    | 275ms |
+| 87        | 0c03eef54469     | 400    | 273ms |
+| 88        | c3f2a4652fc7     | 400    | 259ms |
+| 89        | 557dfa268687     | 400    | 256ms |
+| 90        | 8c066f9f120e     | 400    | 239ms |
+| 91        | c3f2a4652fc7     | 400    | 259ms |
+| 92        | 0c03eef54469     | 400    | 272ms |
+| 93        | aa7e47feff86     | 400    | 273ms |
+| 94        | 557dfa268687     | 400    | 257ms |
+| 95        | 8c066f9f120e     | 400    | 240ms |
+| 96        | aa7e47feff86     | 400    | 274ms |
+| 97        | 0c03eef54469     | 400    | 271ms |
+| 98        | c3f2a4652fc7     | 400    | 259ms |
+| 99        | 557dfa268687     | 400    | 258ms |
+| 100       | 8c066f9f120e     | 400    | 240ms |
+```
+
+  Observe que somente um disparo realmente faz a ***Reserva*** do assento. O ***Nginx*** distribui as requisições entre as instâncias e o ***Redis*** comunica a reservas entre as diferentes instâncias da api.
+
+---
+
+## 🧠 Observações Técnicas
+
+- O **Redis** garante sincronização de bloqueio de assentos entre múltiplas instâncias
+- O **Nginx** distribui requisições automaticamente
+- O **instanceId** permite rastrear qual instância atendeu cada requisição
+- A arquitetura suporta **escala horizontal real**
+
+---
+
+## 📌 Autor
+
+**Luiz Henrique Gomes Ribeiro**  
+Desafio técnico — Starsoft
